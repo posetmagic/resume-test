@@ -22,15 +22,6 @@ NOTE: For the direct link to work, after editing your copy of `cv.tex` and pushi
 
 ![](https://i.imgur.com/lwATw1o.png)
 
-## This template on Overleaf
-
-<a href="https://www.overleaf.com/latex/templates/autocv/scfvqfpxncwb"><img alt="Overleaf" src="https://img.shields.io/badge/Overleaf-47A141.svg?style=for-the-badge&logo=Overleaf&logoColor=white"/></a>
-
-Also, if you have a premium subscription to Overleaf, you can use Overleaf's GitHub integration to push changes to your GitHub repo directly from Overleaf.
-
-## Compiling the CV on your local computer
-- type `make` in the `autoCV` directory to produce file `cv.pdf`
-- you can optionally type `make clean` or `make distclean` to remove intermediate files
 
 ## Detailed Instructions..
 
@@ -44,10 +35,3 @@ Also, if you have a premium subscription to Overleaf, you can use Overleaf's Git
 Please start a new discussion or issue if you encounter problems
 
 PS: If you liked the template, do star :star: it! Thanks!
-
-
-### Also, check out:
-
-- [gradfolio](https://github.com/jitinnair1/gradfolio) - a minimal, quick-setup template for a personal website/portfolio
-- [Tail](https://github.com/jitinnair1/tail) - a minimal, quick-setup template for a blog
-
