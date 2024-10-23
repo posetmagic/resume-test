@@ -9,40 +9,38 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DIR: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      
-      - name: Find all .tex files
-        id: tex-files
+
+      - name: Find and build all .tex files
         run: |
-          echo "files=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          # Find all .tex files and build each one
+          find ${{ env.DIR }} -name "*.tex" -print0 | while IFS= read -r -d '' texfile; do
+            echo "Building $texfile"
+            base_dir=$(dirname "$texfile")
+            base_name=$(basename "$texfile" .tex)
+            mkdir -p "$base_dir/_site"
+            # Using the LaTeX Action to compile the .tex file
+            latexmk -pdf -cd "$texfile" -output-directory="$base_dir/_site"
+          done
+        shell: bash
 
-      - name: Build LaTeX files
-        uses: dante-ev/latex-action@latest
-        with:
-          root_file: ${{ matrix.file }}
-          working_directory: ${{ matrix.dir }}
-        strategy:
-          matrix:
-            file_path: ${{ fromJSON(steps.tex-files.outputs.files) }}
-            include:
-              - file: ${{ matrix.file_path }}
-                dir: ${{ dirname(matrix.file_path) }}
-
-      - name: Create _site directory structure
+      - name: Move PDFs to _site preserving structure
         run: |
           mkdir -p _site
-          # Find all generated PDFs and copy them maintaining directory structure
-          find . -type f -name "*.pdf" | while read file; do
-            dir=$(dirname "$file")
-            mkdir -p "_site/$dir"
-            cp "$file" "_site/$dir/"
-          done
-          
+          find ${{ env.DIR }} -name "*.pdf" -exec bash -c '
+            pdf_path="{}"
+            relative_path="${pdf_path#${{ env.DIR }}/}"
+            mkdir -p "_site/$(dirname "$relative_path")"
+            mv "$pdf_path" "_site/$relative_path"
+          ' \;
+
       - name: Copy index.html and CNAME
         run: |
           cp index.html _site/ || true
