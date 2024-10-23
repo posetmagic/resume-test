@@ -10,7 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      tex-matrix: ${{ steps.set-matrix.outputs.tex-matrix }}
+      html-matrix: ${{ steps.set-matrix.outputs.html-matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,19 +23,24 @@ jobs:
         id: set-matrix
         run: |
           # Find all .tex files and create JSON array
-          FILES=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=$FILES" >> $GITHUB_OUTPUT
+          TEX_FILES=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')
+          echo "tex-matrix=$TEX_FILES" >> $GITHUB_OUTPUT
+          
+          # Find all .html files and create JSON array
+          HTML_FILES=$(find . -type f -name "*.html" | jq -R -s -c 'split("\n")[:-1]')
+          echo "html-matrix=$HTML_FILES" >> $GITHUB_OUTPUT
 
       - name: Debug matrix
         run: |
-          echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
+          echo "TeX Matrix: ${{ steps.set-matrix.outputs.tex-matrix }}"
+          echo "HTML Matrix: ${{ steps.set-matrix.outputs.html-matrix }}"
 
   latex-build:
     needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        file: ${{ fromJson(needs.build.outputs.matrix) }}
+        file: ${{ fromJson(needs.build.outputs.tex-matrix) }}
 
     steps:
       - name: Checkout
@@ -57,12 +63,49 @@ jobs:
       - name: Save PDF artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.file }}
+          name: pdf-${{ steps.get-dir.outputs.filename }}
           path: ${{ steps.get-dir.outputs.dir }}/${{ steps.get-dir.outputs.filename }}.pdf
           retention-days: 1
 
+  html-process:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.build.outputs.html-matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get directory and create safe name
+        id: get-info
+        run: |
+          FILE_PATH="${{ matrix.file }}"
+          DIR_PATH=$(dirname "$FILE_PATH")
+          FILENAME=$(basename "$FILE_PATH")
+          # Create a safe artifact name by replacing / with -- and . with -
+          SAFE_PATH=$(echo "$FILE_PATH" | sed 's/[\/.]/-/g')
+          echo "dir=$DIR_PATH" >> $GITHUB_OUTPUT
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          echo "safe_name=html$SAFE_PATH" >> $GITHUB_OUTPUT
+          echo "original_path=$FILE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Create path file
+        run: |
+          echo "${{ steps.get-info.outputs.original_path }}" > path.txt
+
+      - name: Save HTML artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.get-info.outputs.safe_name }}
+          path: |
+            ${{ matrix.file }}
+            path.txt
+          retention-days: 1
+
   collect:
-    needs: latex-build
+    needs: [latex-build, html-process]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -71,22 +114,68 @@ jobs:
       - name: Create site directory
         run: mkdir -p _site
 
-      - name: Download all PDFs
+      - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: _site
+          path: _site/artifacts
 
-      - name: Debug directory structure
+      - name: Debug downloaded artifacts
         run: |
-          echo "Current directory contents:"
-          ls -la
-          echo "\n_site directory contents:"
-          ls -la _site
+          echo "Artifacts directory contents:"
+          ls -R _site/artifacts
 
-      - name: Copy index.html and CNAME
+      - name: Organize files
         run: |
-          cp index.html _site/ || true
-          cp CNAME _site/ || true
+          # Ensure _site directory exists
+          mkdir -p _site
+
+          # Process PDF files if they exist
+          if compgen -G "_site/artifacts/pdf-*" > /dev/null; then
+            for pdf_dir in _site/artifacts/pdf-*; do
+              if [ -d "$pdf_dir" ]; then
+                for pdf_file in "$pdf_dir"/*.pdf; do
+                  if [ -f "$pdf_file" ]; then
+                    # Extract filename without prefix
+                    filename=$(basename "$pdf_file")
+                    orig_name=${filename#pdf-}
+                    # Move PDF to correct location
+                    cp "$pdf_file" "_site/$orig_name"
+                  fi
+                done
+              fi
+            done
+          fi
+
+          # Process HTML files
+          for artifact_dir in _site/artifacts/*; do
+            if [ -d "$artifact_dir" ] && [ -f "$artifact_dir/path.txt" ]; then
+              # Read original path from path.txt
+              orig_path=$(cat "$artifact_dir/path.txt")
+              # Create target directory
+              target_dir="_site/$(dirname "$orig_path")"
+              mkdir -p "$target_dir"
+              # Find and move HTML file
+              for html_file in "$artifact_dir"/*.html; do
+                if [ -f "$html_file" ]; then
+                  cp "$html_file" "_site/$orig_path"
+                fi
+              done
+            fi
+          done
+
+          # List contents before cleanup
+          echo "Before cleanup:"
+          ls -R _site
+
+          # Clean up artifacts directory
+          rm -rf _site/artifacts
+
+          # List final contents
+          echo "Final directory structure:"
+          ls -R _site
+
+      - name: Copy CNAME
+        run: cp CNAME _site/ || true
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
