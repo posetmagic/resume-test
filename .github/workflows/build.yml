@@ -19,6 +19,7 @@ jobs:
       - name: Find all .tex files
         id: tex-files
         run: |
+          # Find .tex files and output both file path and directory
           echo "files=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
       - name: Debug file list
@@ -36,17 +37,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get directory
+        id: get-dir
+        run: |
+          FILE_PATH="${{ matrix.file_path }}"
+          DIR_PATH=$(dirname "$FILE_PATH")
+          echo "dir=$DIR_PATH" >> $GITHUB_OUTPUT
+          echo "filename=$(basename "$FILE_PATH")" >> $GITHUB_OUTPUT
+
       - name: Build LaTeX files
         uses: dante-ev/latex-action@latest
         with:
-          root_file: ${{ matrix.file_path }}
-          working_directory: ${{ dirname(matrix.file_path) }}
+          root_file: ${{ steps.get-dir.outputs.filename }}
+          working_directory: ${{ steps.get-dir.outputs.dir }}
 
       - name: Save PDF artifact
         uses: actions/upload-artifact@v3
         with:
           name: pdf-${{ matrix.file_path }}
-          path: ${{ matrix.file_path }}.pdf
+          path: ${{ steps.get-dir.outputs.dir }}/${{ steps.get-dir.outputs.filename }}.pdf
           retention-days: 1
 
   collect:
