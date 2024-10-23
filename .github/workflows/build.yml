@@ -9,6 +9,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,22 +18,23 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       
-      - name: Find all .tex files
-        id: tex-files
+      - name: Set matrix
+        id: set-matrix
         run: |
-          # Find .tex files and output both file path and directory
-          echo "files=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          # Find all .tex files and create JSON array
+          FILES=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$FILES" >> $GITHUB_OUTPUT
 
-      - name: Debug file list
+      - name: Debug matrix
         run: |
-          echo "Found files: ${{ steps.tex-files.outputs.files }}"
+          echo "Matrix: ${{ steps.set-matrix.outputs.matrix }}"
 
   latex-build:
     needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        file_path: ${{ fromJSON(needs.build.outputs.files) }}
+        file: ${{ fromJson(needs.build.outputs.matrix) }}
 
     steps:
       - name: Checkout
@@ -40,7 +43,7 @@ jobs:
       - name: Get directory
         id: get-dir
         run: |
-          FILE_PATH="${{ matrix.file_path }}"
+          FILE_PATH="${{ matrix.file }}"
           DIR_PATH=$(dirname "$FILE_PATH")
           echo "dir=$DIR_PATH" >> $GITHUB_OUTPUT
           echo "filename=$(basename "$FILE_PATH")" >> $GITHUB_OUTPUT
@@ -54,7 +57,7 @@ jobs:
       - name: Save PDF artifact
         uses: actions/upload-artifact@v3
         with:
-          name: pdf-${{ matrix.file_path }}
+          name: ${{ matrix.file }}
           path: ${{ steps.get-dir.outputs.dir }}/${{ steps.get-dir.outputs.filename }}.pdf
           retention-days: 1
 
@@ -62,21 +65,23 @@ jobs:
     needs: latex-build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create site directory
+        run: mkdir -p _site
+
       - name: Download all PDFs
         uses: actions/download-artifact@v3
         with:
-          path: pdfs
+          path: _site
 
-      - name: Create _site directory structure
+      - name: Debug directory structure
         run: |
-          mkdir -p _site
-          # Copy all PDFs to _site maintaining directory structure
-          cd pdfs
-          find . -type f -name "*.pdf" | while read file; do
-            dir=$(dirname "$file")
-            mkdir -p "../_site/$dir"
-            cp "$file" "../_site/$dir/"
-          done
+          echo "Current directory contents:"
+          ls -la
+          echo "\n_site directory contents:"
+          ls -la _site
 
       - name: Copy index.html and CNAME
         run: |
@@ -85,6 +90,8 @@ jobs:
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
     runs-on: ubuntu-latest
