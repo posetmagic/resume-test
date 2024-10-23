@@ -9,182 +9,32 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      tex-matrix: ${{ steps.set-matrix.outputs.tex-matrix }}
-      html-matrix: ${{ steps.set-matrix.outputs.html-matrix }}
+    env:
+      DIR: .
+      FILE: Sidney_Lu
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      
-      - name: Set matrix
-        id: set-matrix
-        run: |
-          # Find all .tex files and create JSON array
-          TEX_FILES=$(find . -type f -name "*.tex" | jq -R -s -c 'split("\n")[:-1]')
-          echo "tex-matrix=$TEX_FILES" >> $GITHUB_OUTPUT
-          
-          # Find all .html files and create JSON array
-          HTML_FILES=$(find . -type f -name "*.html" | jq -R -s -c 'split("\n")[:-1]')
-          echo "html-matrix=$HTML_FILES" >> $GITHUB_OUTPUT
-
-      - name: Debug matrix
-        run: |
-          echo "TeX Matrix: ${{ steps.set-matrix.outputs.tex-matrix }}"
-          echo "HTML Matrix: ${{ steps.set-matrix.outputs.html-matrix }}"
-
-  latex-build:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        file: ${{ fromJson(needs.build.outputs.tex-matrix) }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get directory
-        id: get-dir
-        run: |
-          FILE_PATH="${{ matrix.file }}"
-          DIR_PATH=$(dirname "$FILE_PATH")
-          echo "dir=$DIR_PATH" >> $GITHUB_OUTPUT
-          echo "filename=$(basename "$FILE_PATH")" >> $GITHUB_OUTPUT
-
-      - name: Build LaTeX files
+      - name: Build CV
         uses: dante-ev/latex-action@latest
         with:
-          root_file: ${{ steps.get-dir.outputs.filename }}
-          working_directory: ${{ steps.get-dir.outputs.dir }}
-
-      - name: Save PDF artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: pdf-${{ steps.get-dir.outputs.filename }}
-          path: ${{ steps.get-dir.outputs.dir }}/${{ steps.get-dir.outputs.filename }}.pdf
-          retention-days: 1
-
-  html-process:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        file: ${{ fromJson(needs.build.outputs.html-matrix) }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get directory and create safe name
-        id: get-info
+          root_file: ${{ env.FILE }}
+          working_directory: ${{ env.DIR }}
+      - name: Move PDF
         run: |
-          FILE_PATH="${{ matrix.file }}"
-          DIR_PATH=$(dirname "$FILE_PATH")
-          FILENAME=$(basename "$FILE_PATH")
-          # Create a safe artifact name by replacing / with -- and . with -
-          SAFE_PATH=$(echo "$FILE_PATH" | sed 's/[\/.]/-/g')
-          echo "dir=$DIR_PATH" >> $GITHUB_OUTPUT
-          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
-          echo "safe_name=html$SAFE_PATH" >> $GITHUB_OUTPUT
-          echo "original_path=$FILE_PATH" >> $GITHUB_OUTPUT
-
-      - name: Create path file
-        run: |
-          echo "${{ steps.get-info.outputs.original_path }}" > path.txt
-
-      - name: Save HTML artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.get-info.outputs.safe_name }}
-          path: |
-            ${{ matrix.file }}
-            path.txt
-          retention-days: 1
-
-  collect:
-    needs: [latex-build, html-process]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create site directory
-        run: mkdir -p _site
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: _site/artifacts
-
-      - name: Debug downloaded artifacts
-        run: |
-          echo "Artifacts directory contents:"
-          ls -R _site/artifacts
-
-      - name: Organize files
-        run: |
-          # Ensure _site directory exists
           mkdir -p _site
-
-          # Process PDF files if they exist
-          if compgen -G "_site/artifacts/pdf-*" > /dev/null; then
-            for pdf_dir in _site/artifacts/pdf-*; do
-              if [ -d "$pdf_dir" ]; then
-                for pdf_file in "$pdf_dir"/*.pdf; do
-                  if [ -f "$pdf_file" ]; then
-                    # Extract filename without prefix
-                    filename=$(basename "$pdf_file")
-                    orig_name=${filename#pdf-}
-                    # Move PDF to correct location
-                    cp "$pdf_file" "_site/$orig_name"
-                  fi
-                done
-              fi
-            done
-          fi
-
-          # Process HTML files
-          for artifact_dir in _site/artifacts/*; do
-            if [ -d "$artifact_dir" ] && [ -f "$artifact_dir/path.txt" ]; then
-              # Read original path from path.txt
-              orig_path=$(cat "$artifact_dir/path.txt")
-              # Create target directory
-              target_dir="_site/$(dirname "$orig_path")"
-              mkdir -p "$target_dir"
-              # Find and move HTML file
-              for html_file in "$artifact_dir"/*.html; do
-                if [ -f "$html_file" ]; then
-                  cp "$html_file" "_site/$orig_path"
-                fi
-              done
-            fi
-          done
-
-          # List contents before cleanup
-          echo "Before cleanup:"
-          ls -R _site
-
-          # Clean up artifacts directory
-          rm -rf _site/artifacts
-
-          # List final contents
-          echo "Final directory structure:"
-          ls -R _site
-
-      - name: Copy CNAME
-        run: cp CNAME _site/ || true
-
-      - name: Upload pages artifact
+          mv ${{ env.DIR }}/${{ env.FILE }}.pdf ./_site/
+      - name: Copy index.html and CNAME
+        run: |
+          cp index.html _site/ || true
+          cp CNAME _site/ || true
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
   deploy:
     runs-on: ubuntu-latest
-    needs: collect
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
