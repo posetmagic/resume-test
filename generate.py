@@ -16,7 +16,9 @@ for root, dirs, files in os.walk(directory):
 
             # Try converting HTML to PDF
             try:
-                HTML(filename=html_file).write_pdf(output_pdf)
+                HTML(filename=html_file).write_pdf(output_pdf, 
+                                                    stylesheets=None,
+                                                    options={'page-size': 'A4'})
                 print(f"PDF created successfully: {output_pdf}")
             except Exception as e:
                 print(f"Error creating PDF from '{html_file}': {e}")
