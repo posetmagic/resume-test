@@ -8,7 +8,7 @@ body {
     max-width: 850px;
     margin: 0 auto;
     padding: 0 10px; /* Add padding for better appearance on mobile */
-    font-size: 10pt;
+    font-size: 10.5pt;
     line-height: 1.2;
 }
 
@@ -43,32 +43,32 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .header h1 {
-    font-size: 2em;
+    font-size: 1.8em;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .header h2 {
     font-size: 1.2em;
     color: #666;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .contact-info {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px; /* Adds spacing between items */
-    margin-bottom: 10px;
+    margin-bottom: 3px;
 }
 
 .contact-info a {
     color: #333;
     text-decoration: none;
+    margin-right: 10px;  /* Adds spacing between items */
 }
 
 .contact-info a:hover {
@@ -76,25 +76,25 @@ body {
 }
 
 .section {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .section-title {
     font-size: 1.2em;
     text-transform: uppercase;
     border-bottom: 2px solid #333;
-    margin-bottom: 10px;
+    margin-bottom: 3px;
     padding-bottom: 5px;
 }
 
 .experience-item {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .experience-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
     flex-wrap: wrap; /* Stack items on mobile if necessary */
 }
 
@@ -131,7 +131,7 @@ li:before {
 }
 
 .technical-skills {
-    font-size: 0.9em;
+    font-size: 1em;
     font-family: "Times New Roman", Times, serif;
     font-style: italic;
 }
@@ -141,7 +141,7 @@ li:before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
     flex-wrap: wrap; /* Stacks items on mobile */
 }
 
