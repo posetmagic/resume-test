@@ -2,6 +2,8 @@
 
 This repository automates the process of generating PDF resumes from HTML files using GitHub Actions. Whenever you push changes to your repository, it compiles your resume from HTML to PDF seamlessly.
 
+*This project is inspired by [jitinnair1/autoCV](https://github.com/jitinnair1/autoCV) and [FlandreDaisuki/resume](https://github.com/FlandreDaisuki/resume)*
+
 ## Getting Started
 
 ### Prepare Your Resume HTML Files
@@ -48,12 +50,4 @@ The `index.html` files provide links to both the HTML and PDF versions of your r
 │   └── styles.css       # Stylesheet for the resumes
 ```
 
-## Usage Notes
 
-- Ensure that the `build.yml` workflow file in the `.github/workflows/` directory is configured to run the `generate.py` script correctly.
-- Customize the `styles.css` file to modify the appearance of your resumes.
-
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests to enhance this project.
-```
