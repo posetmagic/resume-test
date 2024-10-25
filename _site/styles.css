@@ -11,7 +11,6 @@ body {
     padding: 0 10px; /* Add padding for better appearance on mobile */
     font-size: 10.5pt;
     line-height: 1.2;
-    background-color: #292727; /* Dark background */
 }
 
 @page {
@@ -157,7 +156,7 @@ li:before {
 }
 
 /* Mobile Styles */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     body {
         font-size: 15pt;
         margin-right: 15px;
