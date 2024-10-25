@@ -9,29 +9,36 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DIR: .
-      FILE: Sidney_Lu
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build CV
-        uses: dante-ev/latex-action@latest
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          root_file: ${{ env.FILE }}
-          working_directory: ${{ env.DIR }}
+          python-version: '3.12'  # Use the latest available Python version
+
+      - name: Install dependencies
+        run: |
+          pip install weasyprint  # Install WeasyPrint
+          pip install --no-cache-dir -r requirements.txt  # If you have other dependencies
+
+      - name: Generate PDF from HTML
+        run: python generate.py  # Run your script to generate the PDF
+
       - name: Move PDF
         run: |
           mkdir -p _site
-          mv ${{ env.DIR }}/${{ env.FILE }}.pdf ./_site/
+          mv resume.pdf ./_site/  # Move the generated PDF to _site directory
+
       - name: Copy index.html and CNAME
         run: |
           cp index.html _site/ || true
           cp CNAME _site/ || true
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
