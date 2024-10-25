@@ -24,19 +24,8 @@ jobs:
           pip install --no-cache-dir -r requirements.txt
 
       - name: Generate PDF from HTML
-        run: python generate.py  # Run your script to generate the PDF
-
-      - name: Move PDFs to _site directory
-        run: |
-          mkdir -p _site  # Ensure the _site directory exists
-          find . -name '*.pdf' -exec sh -c 'mkdir -p "_site/$(dirname "{}")" && mv "{}" "_site/{}"' \;  # Move all PDFs while preserving directory structure
-
-      - name: Move HTML files and CNAME recursively
-        run: |
-          mkdir -p _site  # Ensure the _site directory exists
-          find . -name '*.html' -exec sh -c 'mkdir -p "_site/$(dirname "{}")" && mv "{}" "_site/{}"' \; || true  # Move all HTML files while preserving directory structure
-          mv CNAME _site/ || true  # Move the CNAME file to _site directory
-          
+        run: python generate.py
+      
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
