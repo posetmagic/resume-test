@@ -20,8 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install weasyprint  # Install WeasyPrint
-          pip install --no-cache-dir -r requirements.txt  # If you have other dependencies
+          pip install weasyprint
+          pip install --no-cache-dir -r requirements.txt
 
       - name: Generate PDF from HTML
         run: python generate.py  # Run your script to generate the PDF
