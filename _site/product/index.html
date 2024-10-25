@@ -3,37 +3,37 @@
 <head>
     <meta charset="UTF-8">      
 
-    <!--You can add your name and affiliation below to personalise -->
     <meta property="og:title" content="Sidney Lu"/>
-
-    <!--You can add your keywords to personalise-->
     <meta property="og:description" content="Education, Experience, Projects etc."/>
-
     <meta property="og:image" content="https://dummyimage.com/100x100/000/fff&text=CV" />
     <title>Sidney Lu</title>
     <style>
         html, body {
-            height: calc(100% - 2pt); /* Corrected: use 'calc' instead of 'cal' */
+            height: 100%; /* Set height to 100% for the entire viewport */
             margin: 0; /* Remove any default margin */
             font-size: 1.5em; /* Set the base font size to 1.5 */
             line-height: 1.5; /* Adjust line height for better readability */
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack elements vertically */
         }
 
         embed {
-            width: 100%;
-            height: calc(100% - 40px); /* Adjust for space to add download link */
+            flex: 1; /* Allow the embed to take up available space */
+            width: 100%; /* Full width */
             border: none; /* Optional: Remove any border around the embed */
         }
 
         .download-container {
             text-align: center; /* Center the download link */
             margin: 20px 0; /* Add margin for spacing */
+            padding-bottom: 20px; /* Optional: Add some padding at the bottom */
         }
 
         .download-link {
             text-decoration: none; /* Remove underline from link */
             color: #007bff; /* Link color */
             font-weight: bold; /* Bold font */
+            font-size: 0.8em; /* Smaller font size for the text */
         }
 
         .download-link:hover {
@@ -41,17 +41,17 @@
         }
         
         .icon {
-            width: 20px; /* Set icon width */
-            height: 20px; /* Set icon height */
-            vertical-align: middle; /* Align icon with text */
-            margin-right: 5px; /* Space between icon and text */
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <embed src="./resume.html" />
     <div class="download-container">
-        <a class="download-link" href="./resume.pdf" download>
+        <a class="download-link" href="./resume.pdf" download="Sidney_Lu.pdf">
             <img class="icon" src="https://img.icons8.com/material-outlined/24/000000/pdf.png" alt="PDF Icon"/>
             Download PDF
         </a>
