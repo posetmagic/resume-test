@@ -31,9 +31,9 @@ jobs:
           mkdir -p _site
           mv resume.pdf ./_site/  # Move the generated PDF to _site directory
 
-      - name: Copy index.html and CNAME
+      - name: Copy *.html and CNAME
         run: |
-          cp index.html _site/ || true
+          cp *.html _site/ || true
           cp CNAME _site/ || true
           
       - name: Upload artifact
