@@ -1,1 +1,1 @@
-pdftoppm -png Sidney_Lu.pdf output
+pdftoppm -png resume.pdf output

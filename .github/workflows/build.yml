@@ -1,4 +1,4 @@
-name: Build and Deploy CV
+name: Build and Deploy
 on:
   push:
     branches: ["main"]
@@ -28,6 +28,10 @@ jobs:
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+
+      - name: Copy CNAME
+        run: |
+          cp CNAME _site/ || true
 
   deploy:
     runs-on: ubuntu-latest
